@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>Реєстрація</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">Авто<span>Ш</span>кола</div>
+      <nav>
+        <ul>
+          <li><a href="index.html">Головна</a></li>
+          <li><a href="pdr.html">ПДР</a></li> 
+          <li><a href="test.html">Тести</a></li>
+          <li><a href="comments.html">Відгуки</a></li>
+          <li><a href="Contact.html">Контакти</a></li>        
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="login-container">
+    <h1>Реєстрація</h1>
+    <form id="register-form">
+
+      <label for="fullname">ПІБ:</label>
+      <input type="text" id="fullname" name="fullname" required />
+
+      <label for="email">Електронна пошта:</label>
+      <input type="email" id="email" name="email" required />
+
+      <label for="password">Пароль:</label>
+      <input type="password" id="password" name="password" required />
+
+      <button type="submit" class="btn">Зареєструватися</button>
+    </form>
+
+    <div class="register-text">
+      Вже маєте акаунт? <a href="login.html">Увійти</a>
+    </div>
+  </main>
+
+  <footer>
+    © 2025 Автошкола. Усі права захищено.
+  </footer>
+
+  <script>
+    document.getElementById('register-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+  
+      const fullname = document.getElementById('fullname').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+  
+      try {
+        const response = await fetch('http://185.233.36.82:5000/api/users/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fullName: fullname,
+            email: email,
+            password: password
+          })
+        });
+  
+        if (response.ok) {
+          alert('Реєстрація успішна!');
+          window.location.href = 'login.html';
+        } else {
+          const error = await response.text();
+          alert('Помилка: ' + error);
+        }
+      } catch (error) {
+        alert('Помилка з\'єднання: ' + error.message);
+      }
+    });
+  </script>
+  
+</body>
+</html>

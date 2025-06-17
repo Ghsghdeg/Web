@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Правила дорожнього руху</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        #videoSearch {
+            
+            width: 300px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        .video-list ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .video-list li {
+            cursor: pointer;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        .video-list li.active {
+            background-color: #FFA500;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">Авто<span>Школа</span></div>
+            <nav>
+                <ul>
+                    <li><a href="Main.html">Головна</a></li>
+                    <li><a href="pdr.html" class="active">ПДР</a></li> 
+                    <li><a href="test.html">Тести</a></li>
+                    <li><a href="comments.html">Відгуки</a></li>
+                    <li><a href="Contact.html">Контакти</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+   
+
+    <main class="pdr-container">
+        
+        <aside class="video-list">
+            <h3>Відеоуроки</h3>
+            
+            <input type="text" id="videoSearch" placeholder="Пошук відео..." />
+            <ul id="videoMenu"></ul>
+        </aside>
+
+        <section class="video-player">
+            <iframe id="videoFrame" width="100%" height="500" src="" frameborder="0" allowfullscreen></iframe>
+        </section>
+    </main>
+
+    <script>
+        let allVideos = [];
+
+        async function loadVideoList() {
+            try {
+                // Заміни URL на свій API або локальний шлях для тесту
+                const response = await fetch('http://185.233.36.82:5000/api/VideoLessons');
+                allVideos = await response.json();
+
+                renderVideoList(allVideos);
+            } catch (error) {
+                console.error('Помилка завантаження відео:', error);
+                // Для тесту можна використати мокові дані
+                allVideos = [
+                ];
+                renderVideoList(allVideos);
+            }
+        }
+
+        function renderVideoList(videos) {
+            const videoMenu = document.getElementById('videoMenu');
+            videoMenu.innerHTML = '';
+
+            videos.forEach((video, index) => {
+                const li = document.createElement('li');
+                li.textContent = video.title;
+                li.onclick = () => {
+                    document.querySelectorAll('#videoMenu li').forEach(el => el.classList.remove('active'));
+                    li.classList.add('active');
+                    loadVideo(video.url);
+                };
+                videoMenu.appendChild(li);
+
+                // Показати перше відео при першому рендері
+                if (index === 0 && !document.getElementById('videoFrame').src) {
+                    loadVideo(video.url);
+                    li.classList.add('active');
+                }
+            });
+        }
+
+        function loadVideo(url) {
+            document.getElementById('videoFrame').src = url;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadVideoList();
+
+            document.getElementById('videoSearch').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const filtered = allVideos.filter(v => v.title.toLowerCase().includes(searchTerm));
+                renderVideoList(filtered);
+            });
+        });
+    </script>
+</body>
+</html>
