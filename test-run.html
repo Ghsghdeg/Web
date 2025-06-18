@@ -70,7 +70,7 @@
     const API_BASE = "https://pdd-api.duckdns.org/api/tests";
 
  function loadFromSessionStorage() {
-    const stored = sessionStorage.getItem("testQuestions"); // рядок 78
+    const stored = sessionStorage.setItem("testQuestions", JSON.stringify(data));// рядок 78
     if (!stored) {
         alert("Питання не знайдені. Поверніться назад і запустіть тест."); // рядок 80
         return;
@@ -82,6 +82,7 @@
         alert("Питання відсутні або некоректні. Поверніться та перезапустіть тест.");
         return;
     }
+console.log("Завантажено з sessionStorage:", questions);
 
     renderQuestion(); // рядок 89 ← ТУТ ВИКЛИК, ЯКИЙ ЛАМАЄТЬСЯ
 }
@@ -98,6 +99,7 @@ function renderQuestion() {
         alert("Структура питання пошкоджена. Перевір джерело даних.");
         return;
     }
+console.log("renderQuestion отримує:", questions[currentIndex]);
 
     const container = document.getElementById("question-container");
     container.innerHTML = "";
