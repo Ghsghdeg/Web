@@ -75,15 +75,20 @@
         alert("Питання не знайдені. Поверніться назад і запустіть тест.");
         return;
     }
-    questions = JSON.parse(stored);
-    if (!questions.length) {
-        alert("Питання відсутні або некоректні. Поверніться та перезапустіть тест.");
-        return;
-    }
-    renderQuestion();
+  questions = JSON.parse(stored);
+if (!Array.isArray(questions) || !questions.length) {
+    alert("Питання не знайдено або мають неправильну структуру. Поверніться на попередню сторінку.");
+    return;
+}
+renderQuestion();
+
 }
 
     function renderQuestion() {
+        if (!questions[currentIndex]) {
+    alert("Немає поточного питання. Поверніться назад.");
+    return;
+}
         const container = document.getElementById("question-container");
         container.innerHTML = "";
         const q = questions[currentIndex];
