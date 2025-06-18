@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8" />
+    <title>Проходження тесту</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+        #back-to-tests {
+            margin-top: 30px;
+            background: linear-gradient(90deg, #FFA500, #FF6347);
+            color: white;
+            padding: 14px 35px;
+            border-radius: 30px;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        #back-to-tests:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(255, 99, 71, 0.3);
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .incorrect {
+            color: red;
+            font-weight: bold;
+        }
+        .answer-text {
+            margin-left: 8px;
+        }
+        .question-block {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <div class="logo">Авто<span>Школа</span></div>
+        <nav>
+            <ul>
+                <li><a href="Main.html">Головна</a></li>
+                <li><a href="pdr.html" >ПДР</a></li>
+                <li><a href="test.html" class="active">Тести</a></li>
+                <li><a href="comments.html">Відгуки</a></li>
+                <li><a href="Contact.html">Контакти</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<div class="container">
+    <h1 id="test-title">Тестування</h1>
+    <div id="question-container"></div>
+    <button id="next-button">Далі</button>
+    <div id="result-box" style="display:none;"></div>
+</div>
+
+<script>
+    let questions = [];
+    let currentIndex = 0;
+    let correctCount = 0;
+    let userAnswers = []; // щоб зберігати відповіді користувача
+    const userId = JSON.parse(localStorage.currentUser).id;
+    const API_BASE = "https://pdd-api.duckdns.org/api/tests";
+
+    function loadFromSessionStorage() {
+        const stored = sessionStorage.getItem("testQuestions");
+        if (!stored) {
+            alert("Питання не знайдені. Поверніться назад і запустіть тест.");
+            return;
+        }
+        questions = JSON.parse(stored);
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const container = document.getElementById("question-container");
+        container.innerHTML = "";
+        const q = questions[currentIndex];
+
+        const qDiv = document.createElement("div");
+        qDiv.className = "question";
+        qDiv.innerHTML = `<h2>Питання ${currentIndex + 1}: ${q.text}</h2>`;
+
+        q.answers.forEach(a => {
+            const label = document.createElement("label");
+            label.innerHTML = `
+                <input type="radio" name="answer" value="${a.answerID}" />
+                <span class="answer-text">${a.text}</span>
+            `;
+            qDiv.appendChild(label);
+            qDiv.appendChild(document.createElement("br"));
+        });
+
+        container.appendChild(qDiv);
+    }
+
+    document.getElementById("next-button").addEventListener("click", () => {
+        const selected = document.querySelector('input[name="answer"]:checked');
+        if (!selected) return alert("Оберіть відповідь!");
+
+        const answerId = parseInt(selected.value);
+        const currentQuestion = questions[currentIndex];
+        const correctAnswer = currentQuestion.answers.find(a => a.isCorrect);
+
+        userAnswers.push({ questionId: currentQuestion.questionID, selectedAnswerId: answerId });
+
+        if (correctAnswer && correctAnswer.answerID === answerId) {
+            correctCount++;
+        }
+
+        currentIndex++;
+        if (currentIndex < questions.length) {
+            renderQuestion();
+        } else {
+            finishTest();
+        }
+    });
+
+    async function finishTest() {
+        const container = document.getElementById("question-container");
+        container.innerHTML = "";
+        document.getElementById("next-button").style.display = "none";
+
+        const score = Math.round((correctCount / questions.length) * 100);
+        const resultBox = document.getElementById("result-box");
+        resultBox.style.display = "block";
+
+        // Відображення загального результату
+        let resultHTML = `
+            <h2>Результат: ${score}%</h2>
+            <p>Правильних відповідей: ${correctCount} з ${questions.length}</p>
+            <p>${score >= 80 ? "Вітаємо, гарний результат!" : "Іншого разу буде краще"}</p>
+            <hr/>
+            <h3>Деталі тесту:</h3>
+        `;
+
+        // Показуємо всі питання з відповідями, підсвічуючи правильні та вибрані користувачем
+        questions.forEach((q, idx) => {
+            resultHTML += `<div class="question-block"><h4>Питання ${idx + 1}: ${q.text}</h4>`;
+
+            q.answers.forEach(a => {
+                // Визначаємо, чи це правильна відповідь
+                const isCorrect = a.isCorrect;
+                // Чи ця відповідь обрана користувачем
+                const isUserAnswer = userAnswers[idx].selectedAnswerId === a.answerID;
+
+                let className = "";
+                if (isCorrect) className = "correct";
+                if (!isCorrect && isUserAnswer) className = "incorrect";
+
+                resultHTML += `<p class="${className}">${a.text}${isCorrect ? " ✅" : ""}${(!isCorrect && isUserAnswer) ? " ❌" : ""}</p>`;
+            });
+
+            resultHTML += `</div>`;
+        });
+
+        resultHTML += `<button id="back-to-tests">Повернутися до тестів</button>`;
+
+        resultBox.innerHTML = resultHTML;
+
+        // Обробник кнопки назад
+        document.getElementById("back-to-tests").addEventListener("click", () => {
+            window.location.href = "test.html";
+        });
+
+        // Надіслати результат на сервер
+        console.log("Submitting test result:", {
+            userID: userId,
+            testID: questions[0].testID,
+            score,
+            correctAnswers: correctCount,
+            incorrectAnswers: questions.length - correctCount
+        });
+
+        await fetch(`${API_BASE}/submit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userID: userId,
+                testID: questions[0].testID || 1,
+                score: score,
+                correctAnswers: correctCount,
+                incorrectAnswers: questions.length - correctCount
+            })
+        });
+    }
+
+    loadFromSessionStorage();
+</script>
+</body>
+</html>

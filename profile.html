@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Профіль користувача</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/uk.global.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">Авто<span>Школа</span></div>
+      <nav>
+        <ul>
+          <li><a href="Main.html">Головна</a></li>
+          <li><a href="test.html">Тести</a></li>
+          <li><a href="comments.html">Відгуки</a></li>
+          <li><a href="Contact.html">Контакти</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="profile-container">
+    <h1 id="user-name">Профіль користувача</h1>
+
+    <section class="progress-section">
+      <h2>Прогрес навчання</h2>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width: 40%;">40%</div>
+      </div>
+    </section>
+
+    <section class="calendar-section">
+      <h2>Календар занять</h2>
+      <label for="topic-select">Оберіть тему:</label>
+      <select id="topic-select">
+        <option value="">-- Оберіть тему --</option>
+      </select>
+      <div id="calendar"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Автошкола. Усі права захищено.</p>
+  </footer>
+
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (currentUser) {
+      document.getElementById('user-name').innerText = `Профіль: ${currentUser.name || currentUser.email}`;
+
+      fetch(`https://pdd-api.duckdns.org/api/users/progress/${currentUser.id}`)
+        .then(res => res.json())
+        .then(data => {
+          const percent = data.progress;
+          const progressBar = document.getElementById('progress-fill');
+          progressBar.style.width = percent + '%';
+          progressBar.innerText = percent + '%';
+        })
+        .catch(error => console.error('Помилка завантаження прогресу:', error));
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendarEl = document.getElementById('calendar');
+
+    // Завантаження тем з API
+fetch('https://pdd-api.duckdns.org/api/topics')
+  .then(res => res.json())
+  .then(topics => {
+    const select = document.getElementById('topic-select');
+    topics.forEach(topic => {
+      const option = document.createElement('option');
+      option.value = topic.id;
+      option.textContent = topic.name;
+      select.appendChild(option);
+    });
+  })
+  .catch(error => {
+    console.error('Не вдалося завантажити теми:', error);
+  });
+
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'uk',
+        selectable: true,
+        events: `https://pdd-api.duckdns.org/api/schedule/user/${currentUser.id}`,
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+
+        select: function (info) {
+          const topicID = +document.getElementById('topic-select').value;
+          if (!topicID) {
+            alert('Оберіть тему занять!');
+            return;
+          }
+
+          fetch('https://pdd-api.duckdns.org/api/schedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userID: currentUser.id,
+              topicID: topicID,
+              scheduledDate: info.startStr,
+              reminderEnabled: true
+            })
+          })
+          .then(res => {
+            if (res.ok) {
+              calendar.refetchEvents();
+              alert(`Нагадування буде надіслано на ${currentUser.email}`);
+            } else {
+              alert('Помилка при збереженні події');
+            }
+          })
+          .catch(err => {
+            console.error('Помилка запиту:', err);
+            alert('Сервер не відповідає');
+          });
+        },
+
+        eventClick: function (arg) {
+          if (confirm('Видалити цю подію?')) {
+            fetch(`https://pdd-api.duckdns.org/api/schedule/${arg.event.id}`, {
+              method: 'DELETE'
+            })
+            .then(res => {
+              if (res.ok) calendar.refetchEvents();
+              else alert('Не вдалося видалити подію');
+            });
+          }
+        }
+      });
+
+      calendar.render();
+    });
+  </script>
+</body>
+</html>
