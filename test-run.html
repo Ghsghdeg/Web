@@ -69,55 +69,54 @@
     const userId = JSON.parse(localStorage.currentUser).id;
     const API_BASE = "https://pdd-api.duckdns.org/api/tests";
 
- function loadFromSessionStorage() {
-    const stored = sessionStorage.setItem("testQuestions", JSON.stringify(data));// рядок 78
-    if (!stored) {
-        alert("Питання не знайдені. Поверніться назад і запустіть тест."); // рядок 80
-        return;
+    function loadFromSessionStorage() {
+        try {
+            const stored = sessionStorage.getItem("testQuestions");
+            if (!stored) {
+                throw new Error("Питання не знайдені");
+            }
+            
+            questions = JSON.parse(stored);
+            if (!Array.isArray(questions) || questions.length === 0) {
+                throw new Error("Неправильний формат питань");
+            }
+
+            // Validate each question has required properties
+            questions.forEach((q, index) => {
+                if (!q.Text || !Array.isArray(q.Answers)) {
+                    throw new Error(`Питання ${index + 1} має неправильний формат`);
+                }
+            });
+
+            renderQuestion();
+        } catch (error) {
+            console.error("Error loading questions:", error);
+            alert("Помилка при завантаженні тесту. Поверніться назад і спробуйте ще раз.");
+            window.location.href = "test.html";
+        }
     }
 
-    questions = JSON.parse(stored); // рядок 84
+    function renderQuestion() {
+        const container = document.getElementById("question-container");
+        container.innerHTML = "";
+        const q = questions[currentIndex];
 
-    if (!Array.isArray(questions) || !questions.length) {
-        alert("Питання відсутні або некоректні. Поверніться та перезапустіть тест.");
-        return;
+        const qDiv = document.createElement("div");
+        qDiv.className = "question";
+        qDiv.innerHTML = `<h2>Питання ${currentIndex + 1}: ${q.Text}</h2>`;
+
+        q.Answers.forEach(a => {
+            const label = document.createElement("label");
+            label.innerHTML = `
+                <input type="radio" name="answer" value="${a.AnswerID}" />
+                <span class="answer-text">${a.Text}</span>
+            `;
+            qDiv.appendChild(label);
+            qDiv.appendChild(document.createElement("br"));
+        });
+
+        container.appendChild(qDiv);
     }
-
-    renderQuestion(); // рядок 89 ← ТУТ ВИКЛИК, ЯКИЙ ЛАМАЄТЬСЯ
-}
-
-function renderQuestion() {
-    if (!questions[currentIndex]) {
-        alert("Немає поточного питання. Ймовірно, масив порожній або тест не був завантажений.");
-        return;
-    }
-    const q = questions[currentIndex];
-
-    if (!q.text || !Array.isArray(q.answers)) {
-        console.error("Неправильна структура питання:", q);
-        alert("Структура питання пошкоджена. Перевір джерело даних.");
-        return;
-    }
-
-    const container = document.getElementById("question-container");
-    container.innerHTML = "";
-
-    const qDiv = document.createElement("div");
-    qDiv.className = "question";
-    qDiv.innerHTML = `<h2>Питання ${currentIndex + 1}: ${q.text}</h2>`;
-
-    q.answers.forEach(a => {
-        const label = document.createElement("label");
-        label.innerHTML = `
-            <input type="radio" name="answer" value="${a.answerID}" />
-            <span class="answer-text">${a.text}</span>
-        `;
-        qDiv.appendChild(label);
-        qDiv.appendChild(document.createElement("br"));
-    });
-
-    container.appendChild(qDiv);
-}
 
     document.getElementById("next-button").addEventListener("click", () => {
         const selected = document.querySelector('input[name="answer"]:checked');
@@ -125,11 +124,11 @@ function renderQuestion() {
 
         const answerId = parseInt(selected.value);
         const currentQuestion = questions[currentIndex];
-        const correctAnswer = currentQuestion.answers.find(a => a.isCorrect);
+        const correctAnswer = currentQuestion.Answers.find(a => a.IsCorrect);
 
-        userAnswers.push({ questionId: currentQuestion.questionID, selectedAnswerId: answerId });
+        userAnswers.push({ questionId: currentQuestion.QuestionID, selectedAnswerId: answerId });
 
-        if (correctAnswer && correctAnswer.answerID === answerId) {
+        if (correctAnswer && correctAnswer.AnswerID === answerId) {
             correctCount++;
         }
 
@@ -161,19 +160,19 @@ function renderQuestion() {
 
         // Показуємо всі питання з відповідями, підсвічуючи правильні та вибрані користувачем
         questions.forEach((q, idx) => {
-            resultHTML += `<div class="question-block"><h4>Питання ${idx + 1}: ${q.text}</h4>`;
+            resultHTML += `<div class="question-block"><h4>Питання ${idx + 1}: ${q.Text}</h4>`;
 
-            q.answers.forEach(a => {
+            q.Answers.forEach(a => {
                 // Визначаємо, чи це правильна відповідь
-                const isCorrect = a.isCorrect;
+                const isCorrect = a.IsCorrect;
                 // Чи ця відповідь обрана користувачем
-                const isUserAnswer = userAnswers[idx].selectedAnswerId === a.answerID;
+                const isUserAnswer = userAnswers[idx].selectedAnswerId === a.AnswerID;
 
                 let className = "";
                 if (isCorrect) className = "correct";
                 if (!isCorrect && isUserAnswer) className = "incorrect";
 
-                resultHTML += `<p class="${className}">${a.text}${isCorrect ? " ✅" : ""}${(!isCorrect && isUserAnswer) ? " ❌" : ""}</p>`;
+                resultHTML += `<p class="${className}">${a.Text}${isCorrect ? " ✅" : ""}${(!isCorrect && isUserAnswer) ? " ❌" : ""}</p>`;
             });
 
             resultHTML += `</div>`;
@@ -183,15 +182,13 @@ function renderQuestion() {
 
         resultBox.innerHTML = resultHTML;
 
-        // Обробник кнопки назад
         document.getElementById("back-to-tests").addEventListener("click", () => {
             window.location.href = "test.html";
         });
 
-        // Надіслати результат на сервер
         console.log("Submitting test result:", {
             userID: userId,
-            testID: questions[0].testID,
+            testID: questions[0].TestID,
             score,
             correctAnswers: correctCount,
             incorrectAnswers: questions.length - correctCount
@@ -202,7 +199,7 @@ function renderQuestion() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 userID: userId,
-                testID: questions[0].testID || 1,
+                testID: questions[0].TestID || 1,
                 score: score,
                 correctAnswers: correctCount,
                 incorrectAnswers: questions.length - correctCount
