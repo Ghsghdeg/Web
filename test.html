@@ -13,9 +13,9 @@
             <nav>
                 <ul>
                     <li><a href="Main.html">Головна</a></li>
-                    <li><a href="pdr.html">ПДР</a></li> 
+                    <li><a href="pdr.html"class="active">ПДР</a></li> 
                     <li><a href="test.html"class="active">Тести</a></li>
-                    <li><a href="comments.html">Відгуки</a></li>
+                    <li><a href="#">Відгуки</a></li>
                     <li><a href="Contact.html" >Контакти</a></li>
                     
                 </ul>
@@ -48,9 +48,8 @@
     </div>
 
     <script>
-        const API_BASE = "https://pdd-api.duckdns.org/api/tests"; // або ваш хост
+        const API_BASE = "https://pdd-api.duckdns.org/api/tests";
     
-        // ==== 1. Перемикач режимів ====
         document.getElementById('btn-topics').addEventListener('click', () => {
             document.getElementById('topics-section').style.display = 'block';
             document.getElementById('random-section').style.display = 'none';
@@ -68,45 +67,124 @@
         // ==== 2. Отримати список тем ====
         async function loadTopics() {
             try {
-                const response = await fetch(`${API_BASE}/topics`);
+                console.log('Loading topics from:', `${API_BASE}/topics`);
+                const response = await fetch(`${API_BASE}/topics`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log('Topics response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text().catch(() => 'Unknown error');
+                    console.error('Topics error response:', errorText);
+                    throw new Error(`Не вдалося завантажити теми: HTTP ${response.status} - ${errorText}`);
+                }
+                
                 const topics = await response.json();
+                console.log('Raw topics data:', topics);
+                
+                if (!Array.isArray(topics)) {
+                    throw new Error('Сервер повернув некоректні дані тем');
+                }
+                
+                if (topics.length === 0) {
+                    throw new Error('У базі даних немає тем для тестування');
+                }
+                
                 const list = document.getElementById('topic-list');
                 list.innerHTML = '';
     
                 topics.forEach(topic => {
+                    // Log the entire topic object to see its structure
+                    console.log('Full topic object:', topic);
+                    
+                    // The API is returning test data with camelCase properties
+                    const topicId = topic.testID || topic.TestID;
+                    const title = topic.title || topic.Title;
+                    
+                    if (!topicId) {
+                        console.error('Topic missing ID:', topic);
+                        return; // Skip this topic if it has no ID
+                    }
+                    
+                    console.log('Processing topic:', { id: topicId, title: title });
+                    
                     const li = document.createElement('li');
-                    li.textContent = topic.title || topic.title;
-                    li.dataset.id = topic.testID || topic.testID ;
+                    li.textContent = title || `Тема ${topicId}`;
+                    li.dataset.id = topicId;
                     li.addEventListener('click', () => {
                         [...list.children].forEach(c => c.classList.remove('selected'));
                         li.classList.add('selected');
                         document.getElementById('start-topic-test').disabled = false;
+                        console.log('Selected topic:', { id: topicId, title: title });
                     });
                     list.appendChild(li);
                 });
+                
+                console.log(`Successfully loaded ${topics.length} topics`);
             } catch (err) {
-                alert("Не вдалося завантажити теми");
-                console.error(err);
+                console.error("Error loading topics:", err);
+                alert(`Помилка завантаження тем: ${err.message}\n\nПеревірте, чи працює сервер.`);
+                
+                // Show error message in the topic list
+                const list = document.getElementById('topic-list');
+                list.innerHTML = '<li style="color: red; font-weight: bold;">Помилка завантаження тем. Перевірте підключення до сервера.</li>';
             }
         }
     
         // ==== 3. Почати тест по темі ====
         async function startTestByTopic() {
             const selected = document.querySelector('#topic-list li.selected');
-            if (!selected) return;
+            if (!selected) {
+                alert('Будь ласка, оберіть тему для тестування');
+                return;
+            }
     
-            const topicId = selected.dataset.id;
-            const response = await fetch(`${API_BASE}/by-topic/${topicId}`);
-            const questions = await response.json();
-            launchTest(questions);
+            const testId = selected.dataset.id;
+            if (!testId) {
+                alert('Помилка: не знайдено ID теми');
+                return;
+            }
+                
+            try {
+                const response = await fetch(`${API_BASE}/by-test/${testId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Помилка сервера: ${response.status}`);
+                }
+                
+                const questions = await response.json();
+                
+                if (!questions || !Array.isArray(questions) || questions.length === 0) {
+                    throw new Error('Не отримано питань від сервера');
+                }
+                
+                launchTest(questions);
+            } catch (error) {
+                alert(`Помилка при завантаженні тесту: ${error.message}`);
+            }
         }
     
         // ==== 4. Випадковий тест ====
         async function startRandomTest() {
-            const count = document.getElementById('random-question-count').value;
-            const response = await fetch(`${API_BASE}/random/${count}`);
-            const questions = await response.json();
-            launchTest(questions);
+            try {
+                const count = document.getElementById('random-question-count').value;
+                const response = await fetch(`${API_BASE}/random/${count}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const questions = await response.json();
+                if (!questions || !Array.isArray(questions) || questions.length === 0) {
+                    throw new Error('No questions received from the server');
+                }
+                launchTest(questions);
+            } catch (error) {
+                console.error('Error starting random test:', error);
+                alert('Помилка при завантаженні тесту. Спробуйте ще раз.');
+            }
         }
     
         // ==== 5. Відобразити тест ====
