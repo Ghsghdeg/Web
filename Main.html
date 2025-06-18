@@ -7,6 +7,20 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .language-switcher {
+            margin-left: 20px;
+        }
+
+        .language-switcher button {
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
     <!-- Шапка -->
@@ -15,17 +29,22 @@
             <div class="logo">Авто<span>Школа</span></div>
             <nav>
                 <ul>
-                    <li><a href="Main.html"class="active">Головна</a></li>
+                    <li><a href="Main.html" class="active">Головна</a></li>
                     <li><a href="pdr.html">ПДР</a></li> 
                     <li><a href="test.html">Тести</a></li>
                     <li><a href="comments.html">Відгуки</a></li>
-                    <li><a href="Contact.html" >Контакти</a></li>
+                    <li><a href="Contact.html">Контакти</a></li>
                 </ul>
             </nav>
-            
+
+
             <div class="header-icons">
-                <a  id="user-icon" href="#"><i class="fas fa-user"></i></a>
+                <a id="user-icon" href="#"><i class="fas fa-user"></i></a>
+                <div class="language-switcher">
+                    <button onclick="toggleLanguage()">🌐 UKR / ENG</button>
+                </div>
             </div>
+            
         </div>
     </header>
 
@@ -48,7 +67,6 @@
             </div>
         </div>
     </section>
-    
 
     <!-- Картки курсів -->
     <section class="courses">
@@ -70,7 +88,6 @@
             </div>
         </div>
     </section>
-    
 
     <!-- Футер -->
     <footer>
@@ -79,6 +96,94 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script>
+        const translations = {
+            uk: {
+                main: "Головна",
+                rules: "ПДР",
+                tests: "Тести",
+                reviews: "Відгуки",
+                contacts: "Контакти",
+                slogan: "Твоя дорога починається тут",
+                subtitle: "Навчання, підтримка, успіх — усе для впевненого старту за кермом",
+                contactUs: "Зв'язатися з нами",
+                whyUs: "Чому обирають нас?",
+                benefit1: "✅ Досвідчені інструктори",
+                benefit2: "✅ Актуальні матеріали ПДР",
+                benefit3: "✅ Зручний онлайн-формат",
+                benefit4: "✅ Підтримка 24/7",
+                ourCourses: "Наші курси",
+                theoryTitle: "Теорія ПДР",
+                theoryDesc: "Вивчення правил дорожнього руху з нуля",
+                theoryBtn: "Детальніше",
+                examTitle: "Екзамени",
+                examDesc: "Підготовка до теорії та практики в ДМС",
+                examBtn: "Тестування",
+                footer: "© 2025 АвтоШкола. Усі права захищені."
+            },
+            en: {
+                main: "Home",
+                rules: "Traffic Rules",
+                tests: "Tests",
+                reviews: "Reviews",
+                contacts: "Contact",
+                slogan: "Your journey starts here",
+                subtitle: "Training, support, success — everything for a confident start behind the wheel",
+                contactUs: "Contact Us",
+                whyUs: "Why choose us?",
+                benefit1: "✅ Experienced instructors",
+                benefit2: "✅ Up-to-date traffic materials",
+                benefit3: "✅ Convenient online format",
+                benefit4: "✅ 24/7 support",
+                ourCourses: "Our Courses",
+                theoryTitle: "Traffic Theory",
+                theoryDesc: "Learn traffic rules from scratch",
+                theoryBtn: "Learn more",
+                examTitle: "Exams",
+                examDesc: "Preparation for theory and practice at DMS",
+                examBtn: "Testing",
+                footer: "© 2025 AutoSchool. All rights reserved."
+            }
+        };
+
+        let currentLang = "uk";
+
+        function toggleLanguage() {
+            currentLang = currentLang === "uk" ? "en" : "uk";
+            updateTexts();
+        }
+
+        function updateTexts() {
+            const t = translations[currentLang];
+            document.querySelector('nav ul li:nth-child(1) a').textContent = t.main;
+            document.querySelector('nav ul li:nth-child(2) a').textContent = t.rules;
+            document.querySelector('nav ul li:nth-child(3) a').textContent = t.tests;
+            document.querySelector('nav ul li:nth-child(4) a').textContent = t.reviews;
+            document.querySelector('nav ul li:nth-child(5) a').textContent = t.contacts;
+            document.querySelector('.hero-text h1').textContent = t.slogan;
+            document.querySelector('.hero-text p').textContent = t.subtitle;
+            document.querySelector('.hero-text a').textContent = t.contactUs;
+            document.querySelector('.hero-form h3').textContent = t.whyUs;
+
+            const benefits = document.querySelectorAll('.hero-form ul li');
+            benefits[0].textContent = t.benefit1;
+            benefits[1].textContent = t.benefit2;
+            benefits[2].textContent = t.benefit3;
+            benefits[3].textContent = t.benefit4;
+
+            document.querySelector('.courses h2').textContent = t.ourCourses;
+
+            const cards = document.querySelectorAll('.card');
+            cards[0].querySelector('h3').textContent = t.theoryTitle;
+            cards[0].querySelector('p').textContent = t.theoryDesc;
+            cards[0].querySelector('a').textContent = t.theoryBtn;
+
+            cards[1].querySelector('h3').textContent = t.examTitle;
+            cards[1].querySelector('p').textContent = t.examDesc;
+            cards[1].querySelector('a').textContent = t.examBtn;
+
+            document.querySelector('footer p').textContent = t.footer;
+        }
+    </script>
 </body>
 </html>
