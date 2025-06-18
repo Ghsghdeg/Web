@@ -6,6 +6,39 @@
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/uk.global.min.js"></script>
+  <style>
+    .header-icons {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .language-switcher {
+      margin-left: 15px;
+    }
+
+    .language-switcher button {
+      padding: 6px 14px;
+      font-size: 14px;
+      background: linear-gradient(to right, #00b4db, #0083b0);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      font-weight: 500;
+    }
+
+    .language-switcher button:hover {
+      background: linear-gradient(to right, #0083b0, #00b4db);
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -19,24 +52,30 @@
           <li><a href="Contact.html">Контакти</a></li>
         </ul>
       </nav>
+      <div class="header-icons">
+        
+      </div>
     </div>
+<div class="language-switcher">
+          <button onclick="toggleLang()">🌐 UKR / ENG</button>
+        </div>
   </header>
 
   <main class="profile-container">
     <h1 id="user-name">Профіль користувача</h1>
 
     <section class="progress-section">
-      <h2>Прогрес навчання</h2>
+      <h2 id="progressTitle">Прогрес навчання</h2>
       <div class="progress-bar">
         <div class="progress-fill" id="progress-fill" style="width: 40%;">40%</div>
       </div>
     </section>
 
     <section class="calendar-section">
-      <h2>Календар занять</h2>
-      <label for="topic-select">Оберіть тему:</label>
+      <h2 id="calendarTitle">Календар занять</h2>
+      <label for="topic-select" id="topicLabel">Оберіть тему:</label>
       <select id="topic-select">
-        <option value="">-- Оберіть тему --</option>
+        <option value="" id="selectPlaceholder">-- Оберіть тему --</option>
       </select>
       <div id="calendar"></div>
     </section>
@@ -65,21 +104,20 @@
     document.addEventListener('DOMContentLoaded', function () {
       const calendarEl = document.getElementById('calendar');
 
-    // Завантаження тем з API
-fetch('https://pdd-api.duckdns.org/api/topics')
-  .then(res => res.json())
-  .then(topics => {
-    const select = document.getElementById('topic-select');
-    topics.forEach(topic => {
-      const option = document.createElement('option');
-      option.value = topic.testID;
-      option.textContent = topic.title;
-      select.appendChild(option);
-    });
-  })
-  .catch(error => {
-    console.error('Не вдалося завантажити теми:', error);
-  });
+      fetch('https://pdd-api.duckdns.org/api/topics')
+        .then(res => res.json())
+        .then(topics => {
+          const select = document.getElementById('topic-select');
+          topics.forEach(topic => {
+            const option = document.createElement('option');
+            option.value = topic.testID;
+            option.textContent = topic.title;
+            select.appendChild(option);
+          });
+        })
+        .catch(error => {
+          console.error('Не вдалося завантажити теми:', error);
+        });
 
       const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
@@ -95,7 +133,7 @@ fetch('https://pdd-api.duckdns.org/api/topics')
         select: function (info) {
           const topicID = +document.getElementById('topic-select').value;
           if (!topicID) {
-            alert('Оберіть тему занять!');
+            alert(lang === 'uk' ? 'Оберіть тему занять!' : 'Please select a topic!');
             return;
           }
 
@@ -112,31 +150,65 @@ fetch('https://pdd-api.duckdns.org/api/topics')
           .then(res => {
             if (res.ok) {
               calendar.refetchEvents();
-              alert(`Нагадування буде надіслано на ${currentUser.email}`);
+              alert((lang === 'uk' ? 'Нагадування буде надіслано на' : 'Reminder will be sent to') + ` ${currentUser.email}`);
             } else {
-              alert('Помилка при збереженні події');
+              alert(lang === 'uk' ? 'Помилка при збереженні події' : 'Error saving event');
             }
           })
           .catch(err => {
             console.error('Помилка запиту:', err);
-            alert('Сервер не відповідає');
+            alert(lang === 'uk' ? 'Сервер не відповідає' : 'Server is not responding');
           });
         },
 
         eventClick: function (arg) {
-          if (confirm('Видалити цю подію?')) {
+          if (confirm(lang === 'uk' ? 'Видалити цю подію?' : 'Delete this event?')) {
             fetch(`https://pdd-api.duckdns.org/api/schedule/${arg.event.id}`, {
               method: 'DELETE'
             })
             .then(res => {
               if (res.ok) calendar.refetchEvents();
-              else alert('Не вдалося видалити подію');
+              else alert(lang === 'uk' ? 'Не вдалося видалити подію' : 'Failed to delete event');
             });
           }
         }
       });
 
       calendar.render();
+    });
+
+    const translations = {
+      uk: {
+        progressTitle: "Прогрес навчання",
+        calendarTitle: "Календар занять",
+        topicLabel: "Оберіть тему:",
+        selectPlaceholder: "-- Оберіть тему --",
+      },
+      en: {
+        progressTitle: "Learning Progress",
+        calendarTitle: "Schedule Calendar",
+        topicLabel: "Select Topic:",
+        selectPlaceholder: "-- Select Topic --",
+      }
+    };
+
+    let lang = "uk";
+
+    function toggleLang() {
+      lang = lang === "uk" ? "en" : "uk";
+      applyLang();
+    }
+
+    function applyLang() {
+      const t = translations[lang];
+      document.getElementById("progressTitle").textContent = t.progressTitle;
+      document.getElementById("calendarTitle").textContent = t.calendarTitle;
+      document.getElementById("topicLabel").textContent = t.topicLabel;
+      document.getElementById("selectPlaceholder").textContent = t.selectPlaceholder;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      applyLang();
     });
   </script>
 </body>
