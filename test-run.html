@@ -86,32 +86,38 @@
     renderQuestion(); // рядок 89 ← ТУТ ВИКЛИК, ЯКИЙ ЛАМАЄТЬСЯ
 }
 
-
-    function renderQuestion() {
-        if (!questions[currentIndex]) {
-    alert("Немає поточного питання. Поверніться назад.");
-    return;
-}
-        const container = document.getElementById("question-container");
-        container.innerHTML = "";
-        const q = questions[currentIndex];
-
-        const qDiv = document.createElement("div");
-        qDiv.className = "question";
-        qDiv.innerHTML = `<h2>Питання ${currentIndex + 1}: ${q.text}</h2>`;
-
-        q.answers.forEach(a => {
-            const label = document.createElement("label");
-            label.innerHTML = `
-                <input type="radio" name="answer" value="${a.answerID}" />
-                <span class="answer-text">${a.text}</span>
-            `;
-            qDiv.appendChild(label);
-            qDiv.appendChild(document.createElement("br"));
-        });
-
-        container.appendChild(qDiv);
+function renderQuestion() {
+    if (!questions[currentIndex]) {
+        alert("Немає поточного питання. Ймовірно, масив порожній або тест не був завантажений.");
+        return;
     }
+    const q = questions[currentIndex];
+
+    if (!q.text || !Array.isArray(q.answers)) {
+        console.error("Неправильна структура питання:", q);
+        alert("Структура питання пошкоджена. Перевір джерело даних.");
+        return;
+    }
+
+    const container = document.getElementById("question-container");
+    container.innerHTML = "";
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `<h2>Питання ${currentIndex + 1}: ${q.text}</h2>`;
+
+    q.answers.forEach(a => {
+        const label = document.createElement("label");
+        label.innerHTML = `
+            <input type="radio" name="answer" value="${a.answerID}" />
+            <span class="answer-text">${a.text}</span>
+        `;
+        qDiv.appendChild(label);
+        qDiv.appendChild(document.createElement("br"));
+    });
+
+    container.appendChild(qDiv);
+}
 
     document.getElementById("next-button").addEventListener("click", () => {
         const selected = document.querySelector('input[name="answer"]:checked');
