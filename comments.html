@@ -5,6 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Відгуки користувачів</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .language-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .language-switcher button {
+            padding: 6px 14px;
+            font-size: 14px;
+            background: linear-gradient(to right, #00b4db, #0083b0);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-weight: 500;
+        }
+
+        .language-switcher button:hover {
+            background: linear-gradient(to right, #0083b0, #00b4db);
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -21,41 +43,80 @@
         </div>
     </header>
 
-    </section>
+    <div class="language-switcher">
+        <button onclick="toggleLanguage()">🌐 UKR / ENG</button>
+    </div>
+
     <section class="profile-container">
-        <h1>Відгуки користувачів</h1>
+        <h1 id="title">Відгуки користувачів</h1>
         <div id="reviews-list" class="chat-window"></div>
-    
+
         <form id="review-form" class="chat-form">
             <textarea id="review-text" placeholder="Напишіть ваш відгук..." required></textarea>
-            <button type="submit">Відправити</button>
+            <button type="submit" id="submit-btn">Відправити</button>
         </form>
-        
-        <script>
+    </section>
+
+    <script>
+        const translations = {
+            uk: {
+                title: "Відгуки користувачів",
+                placeholder: "Напишіть ваш відгук...",
+                submit: "Відправити",
+                noReviews: "Наразі немає відгуків.",
+                errorLoading: "Помилка завантаження відгуків.",
+                sendError: "Не вдалося надіслати відгук. Спробуйте пізніше.",
+                date: "Дата"
+            },
+            en: {
+                title: "User Reviews",
+                placeholder: "Write your review...",
+                submit: "Send",
+                noReviews: "No reviews yet.",
+                errorLoading: "Failed to load reviews.",
+                sendError: "Could not send review. Try later.",
+                date: "Date"
+            }
+        };
+
+        let lang = "uk";
+
+        function toggleLanguage() {
+            lang = lang === "uk" ? "en" : "uk";
+            applyTranslations();
+            loadReviews(); // перезавантажити з перекладом
+        }
+
+        function applyTranslations() {
+            const t = translations[lang];
+            document.getElementById("title").textContent = t.title;
+            document.getElementById("review-text").placeholder = t.placeholder;
+            document.getElementById("submit-btn").textContent = t.submit;
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             const container = document.getElementById("reviews-list");
             const form = document.getElementById("review-form");
             const textarea = document.getElementById("review-text");
-        
-            
-            const currentUserID = JSON.parse(localStorage.currentUser).id;  
-        
+            const currentUserID = JSON.parse(localStorage.currentUser).id;
+
             function loadReviews() {
                 fetch("https://pdd-api.duckdns.org/api/comments")
                     .then(response => response.json())
                     .then(data => {
                         container.innerHTML = "";
+                        const t = translations[lang];
                         if (!data.length) {
-                            container.innerHTML = "<p>Наразі немає відгуків.</p>";
+                            container.innerHTML = `<p>${t.noReviews}</p>`;
                             return;
                         }
-        
+
                         data.forEach(review => {
                             const div = document.createElement("div");
                             div.classList.add("contact-item");
                             div.innerHTML = `
                                 <h3>${review.userName || 'Користувач'}</h3>
-                                <p><strong>Дата:</strong> ${new Date(review.datePosted).toLocaleDateString()}</p>
+                                <p><strong>${t.date}:</strong> ${new Date(review.datePosted).toLocaleDateString()}</p>
                                 <p>${review.text}</p>
                             `;
                             container.appendChild(div);
@@ -63,17 +124,15 @@
                         container.scrollTop = container.scrollHeight;
                     })
                     .catch(() => {
-                        container.innerHTML = "<p>Помилка завантаження відгуків.</p>";
+                        container.innerHTML = `<p>${translations[lang].errorLoading}</p>`;
                     });
             }
-        
-            loadReviews();
-        
+
             form.addEventListener("submit", e => {
                 e.preventDefault();
                 const text = textarea.value.trim();
                 if (!text) return;
-        
+
                 fetch("https://pdd-api.duckdns.org/api/comments", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -82,22 +141,23 @@
                         text: text
                     })
                 })
-                .then(response => {
-                    if (!response.ok) throw new Error("Помилка відправки відгуку");
-                    return response.json();
-                })
-                .then(data => {
-                    textarea.value = "";
-                    loadReviews();
-                })
-                .catch(err => {
-                    alert("Не вдалося надіслати відгук. Спробуйте пізніше.");
-                    console.error(err);
-                });
+                    .then(response => {
+                        if (!response.ok) throw new Error("Error");
+                        return response.json();
+                    })
+                    .then(() => {
+                        textarea.value = "";
+                        loadReviews();
+                    })
+                    .catch(err => {
+                        alert(translations[lang].sendError);
+                        console.error(err);
+                    });
             });
+
+            applyTranslations();
+            loadReviews();
         });
-        </script>
-        
-    
+    </script>
 </body>
 </html>
