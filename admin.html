@@ -248,7 +248,7 @@
     let selectedVideoId = null;
 
     async function loadVideos() {
-      const res = await fetch('http://185.233.36.82:5000/api/video');
+      const res = await fetch('https://pdd-api.duckdns.org/api/video');
       const videos = await res.json();
       const list = document.getElementById('video-list');
       list.innerHTML = '';
@@ -273,7 +273,7 @@
     async function addVideo() {
       const title = document.getElementById('video-title').value;
       const videoUrl = document.getElementById('video-url').value;
-      await fetch('http://185.233.36.82:5000/api/video', {
+      await fetch('https://pdd-api.duckdns.org/api/video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, videoUrl })
@@ -288,7 +288,7 @@ async function createTest() {
   const title = document.getElementById('new-test-title').value.trim();
   if (!title) return alert("Введіть назву теми!");
 
-  const res = await fetch('http://185.233.36.82:5000/api/AdminTests/create-test', {
+  const res = await fetch('https://pdd-api.duckdns.org/api/AdminTests/create-test', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title })
@@ -317,7 +317,7 @@ async function loadTests() {
 
   tests.forEach(t => {
     const opt = document.createElement('option');
-    opt.value = t.testID ?? t.id; // використай t.id якщо API повертає саме його
+    opt.value = t.testID ?? t.id;  
     opt.textContent = t.title;
     select.appendChild(opt);
   });
@@ -351,7 +351,7 @@ async function addQuestion() {
     answers
   };
 
-  const res = await fetch('http://185.233.36.82:5000/api/AdminTests/add-question', {
+  const res = await fetch('https://pdd-api.duckdns.org/api/AdminTests/add-question', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(question)
@@ -374,7 +374,7 @@ async function deleteTest() {
 
   if (!confirm("Ви дійсно хочете видалити цю тему?")) return;
 
-  const res = await fetch(`http://185.233.36.82:5000/api/AdminTests/${testId}`, {
+  const res = await fetch(`https://pdd-api.duckdns.org/api/AdminTests/${testId}`, {
     method: 'DELETE'
   });
 
@@ -388,8 +388,7 @@ async function deleteTest() {
 
     document.addEventListener('DOMContentLoaded', loadTests);
   </script>
-
-<!-- решта скриптів для createTest, loadTests, addQuestion, deleteVideo тощо — вже вставлені вище і не змінюються -->
+ 
 
 </body>
 </html>
