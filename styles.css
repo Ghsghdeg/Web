@@ -59,7 +59,27 @@ header .container {
     justify-content: space-between;
     align-items: center;
 }
+.header-icons {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
+        .language-switcher button {
+            padding: 6px 14px;
+            font-size: 14px;
+            background: linear-gradient(to right, #00b4db, #0083b0);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-weight: 500;
+        }
+
+        .language-switcher button:hover {
+            background: linear-gradient(to right, #0083b0, #00b4db);
+        }
 .logo {
     font-size: 24px;
     font-weight: bold;
