@@ -234,7 +234,160 @@
     loadTests();
     applyLang();
   });
-</script>
+   function showPanel(id) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      if (id === 'video') loadVideos();
+      if (id === 'tests') loadTests();
+    }
+
+    function goToHome() {
+      window.location.href = 'Main.html';
+    }
+
+    let selectedVideoId = null;
+
+    async function loadVideos() {
+      const res = await fetch('http://185.233.36.82:5000/api/video');
+      const videos = await res.json();
+      const list = document.getElementById('video-list');
+      list.innerHTML = '';
+      videos.forEach(v => {
+        const li = document.createElement('li');
+        li.textContent = `${v.title}`;
+        li.onclick = () => {
+          document.querySelectorAll('#video-list li').forEach(el => el.classList.remove('selected'));
+          li.classList.add('selected');
+          selectedVideoId = v.videoId;
+        };
+        list.appendChild(li);
+      });
+    }
+
+    async function deleteVideo() {
+      if (!selectedVideoId) return;
+      await fetch(`http://185.233.36.82:5000/api/video/${selectedVideoId}`, { method: 'DELETE' });
+      loadVideos();
+    }
+
+    async function addVideo() {
+      const title = document.getElementById('video-title').value;
+      const videoUrl = document.getElementById('video-url').value;
+      await fetch('http://185.233.36.82:5000/api/video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, videoUrl })
+      });
+      document.getElementById('video-title').value = '';
+      document.getElementById('video-url').value = '';
+      loadVideos();
+    }
+
+    <!-- Заміна createTest() -->
+async function createTest() {
+  const title = document.getElementById('new-test-title').value.trim();
+  if (!title) return alert("Введіть назву теми!");
+
+  const res = await fetch('http://185.233.36.82:5000/api/AdminTests/create-test', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title })
+  });
+
+  if (res.ok) {
+    alert("Тему створено!");
+    document.getElementById('new-test-title').value = '';
+    loadTests();
+  } else {
+    alert("Помилка створення теми");
+  }
+}
+
+
+async function loadTests() {
+  const res = await fetch('https://pdd-api.duckdns.org/api/AdminTests');
+  if (!res.ok) {
+    alert('Не вдалося завантажити теми');
+    return;
+  }
+
+  const tests = await res.json();
+  const select = document.getElementById('test-select');
+  select.innerHTML = '<option value="">Оберіть тему</option>';
+
+  tests.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.testID ?? t.id; // використай t.id якщо API повертає саме його
+    opt.textContent = t.title;
+    select.appendChild(opt);
+  });
+}
+
+
+async function addQuestion() {
+  const testId = document.getElementById('test-select').value;
+  const text = document.getElementById('question-text').value.trim();
+  const difficulty = +document.getElementById('question-difficulty').value;
+  const answerInputs = document.querySelectorAll('.answer-input');
+  const correctIndex = +document.getElementById('correct-index').value - 1;
+
+  if (!testId || !text || difficulty < 1 || difficulty > 3 || answerInputs.length < 4 || correctIndex < 0 || correctIndex > 3) {
+    return alert("Заповніть всі поля коректно!");
+  }
+
+  const answers = Array.from(answerInputs).map((input, i) => ({
+    text: input.value.trim(),
+    isCorrect: i === correctIndex
+  }));
+
+  if (answers.some(a => !a.text)) {
+    return alert("Усі варіанти відповідей повинні бути заповнені");
+  }
+
+  const question = {
+    text,
+    difficulty,
+    testID: +testId,
+    answers
+  };
+
+  const res = await fetch('http://185.233.36.82:5000/api/AdminTests/add-question', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(question)
+  });
+
+  if (res.ok) {
+    alert("Питання додано!");
+    document.getElementById('question-text').value = '';
+    document.getElementById('question-difficulty').value = '';
+    document.getElementById('correct-index').value = '';
+    answerInputs.forEach(i => i.value = '');
+  } else {
+    alert("Помилка при додаванні питання");
+  }
+}
+
+async function deleteTest() {
+  const testId = document.getElementById('test-select').value;
+  if (!testId) return alert("Оберіть тему для видалення!");
+
+  if (!confirm("Ви дійсно хочете видалити цю тему?")) return;
+
+  const res = await fetch(`http://185.233.36.82:5000/api/AdminTests/${testId}`, {
+    method: 'DELETE'
+  });
+
+  if (res.ok) {
+    alert("Тему видалено");
+    loadTests();
+  } else {
+    alert("Помилка при видаленні теми");
+  }
+}
+
+    document.addEventListener('DOMContentLoaded', loadTests);
+  </script>
 
 <!-- решта скриптів для createTest, loadTests, addQuestion, deleteVideo тощо — вже вставлені вище і не змінюються -->
 
