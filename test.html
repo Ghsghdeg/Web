@@ -75,8 +75,8 @@
     
                 topics.forEach(topic => {
                     const li = document.createElement('li');
-                    li.textContent = topic.title || topic.Title;
-                    li.dataset.id = topic.topicID || topic.TopicID;
+                    li.textContent = topic.title || topic.title;
+                    li.dataset.id = topic.testID || topic.testID ;
                     li.addEventListener('click', () => {
                         [...list.children].forEach(c => c.classList.remove('selected'));
                         li.classList.add('selected');
