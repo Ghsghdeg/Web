@@ -34,6 +34,27 @@ body {
     border: none;
     cursor: pointer;
 }
+#difficulty-select,
+#random-difficulty-select {
+    width: 200px;
+    padding: 8px 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    color: #333;
+    transition: border 0.3s ease, box-shadow 0.3s ease;
+    margin: 10px 0;
+    outline: none;
+    cursor: pointer;
+}
+
+#difficulty-select:focus,
+#random-difficulty-select:focus {
+    border-color: #0083b0;
+    box-shadow: 0 0 5px rgba(0, 131, 176, 0.5);
+    background-color: #fff;
+}
 
 .btn:hover,
 #login-form button:hover,
