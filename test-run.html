@@ -66,34 +66,70 @@
     let currentIndex = 0;
     let correctCount = 0;
     let userAnswers = []; // щоб зберігати відповіді користувача
-    const userId = JSON.parse(localStorage.currentUser).id;
+    
+    // Safely get user ID
+    let userId = 1; // default user ID
+    try {
+        const currentUser = localStorage.getItem('currentUser');
+        if (currentUser) {
+            const userObj = JSON.parse(currentUser);
+            userId = userObj.id || userObj.userID || userObj.UserID || 1;
+        }
+    } catch (error) {
+        console.warn('Could not get user ID from localStorage:', error);
+    }
+    
     const API_BASE = "https://pdd-api.duckdns.org/api/tests";
 
     function loadFromSessionStorage() {
+        const stored = sessionStorage.getItem("testQuestions");
+        
+        if (!stored) {
+            alert("Питання не знайдені. Поверніться назад і спробуйте ще раз.");
+            window.location.href = "test.html";
+            return;
+        }
+        
         try {
-            const stored = sessionStorage.getItem("testQuestions");
-            if (!stored) {
-                throw new Error("Питання не знайдені");
+            questions = JSON.parse(stored);
+        } catch (error) {
+            alert("Помилка парсингу даних. Поверніться назад і спробуйте ще раз.");
+            window.location.href = "test.html";
+            return;
+        }
+        
+        if (!questions || !Array.isArray(questions) || questions.length === 0) {
+            alert("Некоректні дані питань. Поверніться назад і спробуйте ще раз.");
+            window.location.href = "test.html";
+            return;
+        }
+
+        // Нормалізуємо структуру питань
+        for (let i = 0; i < questions.length; i++) {
+            const q = questions[i];
+            
+            // Перевіряємо і виправляємо формат
+            if (!q.Text && q.text) q.Text = q.text;
+            if (!q.Answers && q.answers) q.Answers = q.answers;
+            if (!q.QuestionID && q.questionID) q.QuestionID = q.questionID;
+            if (!q.TestID && q.testID) q.TestID = q.testID;
+            
+            if (!q.Text || !q.Answers) {
+                alert("Некоректний формат питання. Поверніться назад і спробуйте ще раз.");
+                window.location.href = "test.html";
+                return;
             }
             
-            questions = JSON.parse(stored);
-            if (!Array.isArray(questions) || questions.length === 0) {
-                throw new Error("Неправильний формат питань");
+            // Нормалізуємо відповіді
+            for (let j = 0; j < q.Answers.length; j++) {
+                const a = q.Answers[j];
+                if (!a.Text && a.text) a.Text = a.text;
+                if (!a.AnswerID && a.answerID) a.AnswerID = a.answerID;
+                if (a.IsCorrect === undefined && a.isCorrect !== undefined) a.IsCorrect = a.isCorrect;
             }
-
-            // Validate each question has required properties
-            questions.forEach((q, index) => {
-                if (!q.Text || !Array.isArray(q.Answers)) {
-                    throw new Error(`Питання ${index + 1} має неправильний формат`);
-                }
-            });
-
-            renderQuestion();
-        } catch (error) {
-            console.error("Error loading questions:", error);
-            alert("Помилка при завантаженні тесту. Поверніться назад і спробуйте ще раз.");
-            window.location.href = "test.html";
         }
+
+        renderQuestion();
     }
 
     function renderQuestion() {
