@@ -7,8 +7,30 @@
     <link rel="stylesheet" href="styles.css" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
-</head>
+    <style>
+        .header-icons {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
+        .language-switcher button {
+            padding: 6px 14px;
+            font-size: 14px;
+            background: linear-gradient(to right, #00b4db, #0083b0);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-weight: 500;
+        }
+
+        .language-switcher button:hover {
+            background: linear-gradient(to right, #0083b0, #00b4db);
+        }
+    </style>
+</head>
 
 <body>
     <!-- Шапка -->
@@ -25,8 +47,10 @@
                 </ul>
             </nav>
             <div class="header-icons">
-             
-                <a  id="user-icon" href="#"><i class="fas fa-user"></i></a>
+                <a id="user-icon" href="#"><i class="fas fa-user"></i></a>
+                <div class="language-switcher">
+                    <button onclick="toggleLanguage()">🌐 UKR / ENG</button>
+                </div>
             </div>
         </div>
     </header>
@@ -63,14 +87,14 @@
             <div class="contact-form">
                 <h2>Напишіть нам</h2>
                 <form id="contactForm">
-                  <input type="text" name="name" placeholder="Ваше ім’я" required />
-                  <input type="email" name="email" placeholder="Email" required />
-                  <textarea name="message" rows="5" placeholder="Повідомлення" required></textarea>
-                  <button type="submit" class="btn">Надіслати</button>
-                  <p id="responseMessage" style="margin-top: 10px; color: green;"></p>
+                    <input type="text" name="name" placeholder="Ваше ім’я" required />
+                    <input type="email" name="email" placeholder="Email" required />
+                    <textarea name="message" rows="5" placeholder="Повідомлення" required></textarea>
+                    <button type="submit" class="btn">Надіслати</button>
+                    <p id="responseMessage" style="margin-top: 10px; color: green;"></p>
                 </form>
-              </div>
-              
+            </div>
+        </div>
     </section>
 
     <!-- Футер -->
@@ -79,46 +103,125 @@
             <p>&copy; 2025 АвтоШкола. Усі права захищені.</p>
         </div>
     </footer>
+
+    <script defer>
+        const translations = {
+            uk: {
+                main: "Головна",
+                rules: "ПДР",
+                tests: "Тести",
+                reviews: "Відгуки",
+                contacts: "Контакти",
+                contactTitle: "Контакти",
+                contactSubtitle: "Зв’яжіться з нами з будь-яких питань — ми завжди раді допомогти!",
+                address: "Адреса",
+                addressText: "м. Київ, вул. Автошкільна, 12",
+                phone: "Телефон",
+                email: "Email",
+                schedule: "Графік роботи",
+                scheduleText: "Пн–Пт: 09:00–18:00",
+                writeUs: "Напишіть нам",
+                name: "Ваше ім’я",
+                msg: "Повідомлення",
+                send: "Надіслати",
+                sent: "Повідомлення надіслано!",
+                fail: "Не вдалося надіслати повідомлення.",
+                footer: "© 2025 АвтоШкола. Усі права захищені."
+            },
+            en: {
+                main: "Home",
+                rules: "Traffic Rules",
+                tests: "Tests",
+                reviews: "Reviews",
+                contacts: "Contact",
+                contactTitle: "Contact",
+                contactSubtitle: "Contact us with any questions — we’re always happy to help!",
+                address: "Address",
+                addressText: "Kyiv, Avtoshkilna St. 12",
+                phone: "Phone",
+                email: "Email",
+                schedule: "Working Hours",
+                scheduleText: "Mon–Fri: 09:00–18:00",
+                writeUs: "Write to us",
+                name: "Your name",
+                msg: "Message",
+                send: "Send",
+                sent: "Message sent!",
+                fail: "Failed to send message.",
+                footer: "© 2025 AutoSchool. All rights reserved."
+            }
+        };
+
+        let currentLang = "uk";
+
+        function toggleLanguage() {
+            currentLang = currentLang === "uk" ? "en" : "uk";
+            updateContactPageTexts();
+        }
+
+        function updateContactPageTexts() {
+            const t = translations[currentLang];
+            const nav = document.querySelectorAll("nav ul li a");
+            nav[0].textContent = t.main;
+            nav[1].textContent = t.rules;
+            nav[2].textContent = t.tests;
+            nav[3].textContent = t.reviews;
+            nav[4].textContent = t.contacts;
+
+            document.querySelector(".contact-section h1").textContent = t.contactTitle;
+            document.querySelector(".contact-section p").textContent = t.contactSubtitle;
+
+            const items = document.querySelectorAll(".contact-item");
+            items[0].querySelector("h3").textContent = t.address;
+            items[0].querySelector("p").textContent = t.addressText;
+            items[1].querySelector("h3").textContent = t.phone;
+            items[2].querySelector("h3").textContent = t.email;
+            items[3].querySelector("h3").textContent = t.schedule;
+            items[3].querySelector("p").textContent = t.scheduleText;
+
+            document.querySelector(".contact-form h2").textContent = t.writeUs;
+            document.querySelector('input[name="name"]').placeholder = t.name;
+            document.querySelector('textarea[name="message"]').placeholder = t.msg;
+            document.querySelector('.contact-form button').textContent = t.send;
+
+            document.querySelector("footer p").textContent = t.footer;
+        }
+
+        window.onload = function () {
+            const form = document.getElementById("contactForm");
+            const responseMessage = document.getElementById("responseMessage");
+
+            if (!form) {
+                console.error("Форма не знайдена!");
+                return;
+            }
+
+            form.addEventListener("submit", async function (e) {
+                e.preventDefault();
+
+                const name = form.name.value;
+                const email = form.email.value;
+                const message = form.message.value;
+
+                responseMessage.innerText = "Очікуйте...";
+
+                try {
+                    const response = await fetch("https://pdd-api.duckdns.org/api/contact/send", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name, email, message })
+                    });
+
+                    const text = await response.text();
+                    responseMessage.innerText = response.ok
+                        ? translations[currentLang].sent
+                        : "Помилка: " + text;
+                } catch (err) {
+                    console.error("Помилка:", err);
+                    responseMessage.innerText = translations[currentLang].fail;
+                }
+            });
+        };
+    </script>
 </body>
 </html>
-  <script src="script.js"></script>
-<script defer>
-    window.onload = function () {
-      const form = document.getElementById("contactForm");
-      const responseMessage = document.getElementById("responseMessage");
-    
-      if (!form) {
-        console.error("Форма не знайдена!");
-        return;
-      }
-    
-      form.addEventListener("submit", async function (e) {
-        e.preventDefault();
-    
-        const name = form.name.value;
-        const email = form.email.value;
-        const message = form.message.value;
-    
-        responseMessage.innerText = "Очікуйте...";
-    
-        try {
-          const response = await fetch("https://pdd-api.duckdns.org/api/contact/send", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, message })
-          });
-    
-          const text = await response.text();
-          responseMessage.innerText = response.ok
-            ? "Повідомлення надіслано!"
-            : "Помилка: " + text;
-        } catch (err) {
-          console.error("Помилка:", err);
-          responseMessage.innerText = "Не вдалося надіслати повідомлення.";
-        }
-      });
-    };
-    </script>
-    
-
-
