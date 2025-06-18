@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Тести - Автошкола</title>
     <link rel="stylesheet" href="styles.css">
+ 
 </head>
 <body>
     <header>
@@ -13,17 +14,21 @@
             <nav>
                 <ul>
                     <li><a href="Main.html">Головна</a></li>
-                    <li><a href="pdr.html"class="active">ПДР</a></li> 
-                    <li><a href="test.html"class="active">Тести</a></li>
+                    <li><a href="pdr.html" >ПДР</a></li> 
+                    <li><a href="test.html" class="active">Тести</a></li>
                     <li><a href="#">Відгуки</a></li>
-                    <li><a href="Contact.html" >Контакти</a></li>
-                    
+                    <li><a href="Contact.html">Контакти</a></li>
                 </ul>
             </nav>
+            <div class="header-icons">
+                <div class="language-switcher">
+                    <button onclick="toggleLang()">🌐 UKR / ENG</button>
+                </div>
+            </div>
         </div>
     </header>
     <div class="container">
-        <h1>Виберіть тип тестування</h1>
+        <h1 id="title">Виберіть тип тестування</h1>
 
         <div class="tab-buttons">
             <button id="btn-topics" class="active">Тести по темах</button>
@@ -31,7 +36,7 @@
         </div>
 
         <div id="topics-section" class="content-section">
-            <label>Оберіть тему:</label>
+            <label id="label-topic">Оберіть тему:</label>
             <ul class="topic-list" id="topic-list">
                 <!-- Теми підвантажуються сюди -->
             </ul>
@@ -39,7 +44,7 @@
         </div>
 
         <div id="random-section" class="content-section" style="display:none;">
-            <label>Оберіть кількість питань:</label>
+            <label id="label-random-count">Оберіть кількість питань:</label>
             <input type="number" id="random-question-count" min="1" max="50" value="10" />
             <button class="start-test" id="start-random-test">Почати тест</button>
         </div>
@@ -49,45 +54,94 @@
 
     <script>
         const API_BASE = "https://pdd-api.duckdns.org/api/tests";
-    
+
+        // Тексти для перекладу
+        const translations = {
+            uk: {
+                title: "Виберіть тип тестування",
+                btnTopics: "Тести по темах",
+                btnRandom: "Випадкове тестування",
+                labelTopic: "Оберіть тему:",
+                startTopicTest: "Почати тест",
+                labelRandomCount: "Оберіть кількість питань:",
+                startRandomTest: "Почати тест",
+                errLoadTopics: "Помилка завантаження тем. Перевірте підключення до сервера.",
+                alertSelectTopic: "Будь ласка, оберіть тему для тестування",
+                alertNoTestId: "Помилка: не знайдено ID теми",
+                alertLoadTestError: "Помилка при завантаженні тесту:",
+                alertRandomTestError: "Помилка при завантаженні тесту. Спробуйте ще раз."
+            },
+            en: {
+                title: "Select Test Type",
+                btnTopics: "Tests by Topics",
+                btnRandom: "Random Test",
+                labelTopic: "Select Topic:",
+                startTopicTest: "Start Test",
+                labelRandomCount: "Select Number of Questions:",
+                startRandomTest: "Start Test",
+                errLoadTopics: "Error loading topics. Check your server connection.",
+                alertSelectTopic: "Please select a topic for testing",
+                alertNoTestId: "Error: Topic ID not found",
+                alertLoadTestError: "Error loading test:",
+                alertRandomTestError: "Error loading test. Please try again."
+            }
+        };
+
+        let lang = "uk";
+
+        function applyLang() {
+            const t = translations[lang];
+            document.getElementById("title").textContent = t.title;
+            document.getElementById("btn-topics").textContent = t.btnTopics;
+            document.getElementById("btn-random").textContent = t.btnRandom;
+            document.getElementById("label-topic").textContent = t.labelTopic;
+            document.getElementById("start-topic-test").textContent = t.startTopicTest;
+            document.getElementById("label-random-count").textContent = t.labelRandomCount;
+            document.getElementById("start-random-test").textContent = t.startRandomTest;
+        }
+
+        function toggleLang() {
+            lang = lang === "uk" ? "en" : "uk";
+            applyLang();
+        }
+
         document.getElementById('btn-topics').addEventListener('click', () => {
             document.getElementById('topics-section').style.display = 'block';
             document.getElementById('random-section').style.display = 'none';
             document.getElementById('btn-topics').classList.add('active');
             document.getElementById('btn-random').classList.remove('active');
         });
-    
+
         document.getElementById('btn-random').addEventListener('click', () => {
             document.getElementById('topics-section').style.display = 'none';
             document.getElementById('random-section').style.display = 'block';
             document.getElementById('btn-random').classList.add('active');
             document.getElementById('btn-topics').classList.remove('active');
         });
-    
-        // ==== 2. Отримати список тем ====
+
         async function loadTopics() {
             try {
                 const response = await fetch(`${API_BASE}/topics`);
-                
+
                 if (!response.ok) {
-                    throw new Error('Помилка завантаження тем');
+                    throw new Error(translations[lang].errLoadTopics);
                 }
-                
+
                 const topics = await response.json();
-                
+
                 if (!Array.isArray(topics) || topics.length === 0) {
-                    throw new Error('Немає доступних тем');
+                    throw new Error(translations[lang].errLoadTopics);
                 }
-                
+
                 const list = document.getElementById('topic-list');
                 list.innerHTML = '';
-    
+
                 topics.forEach(topic => {
                     const topicId = topic.testID || topic.TestID;
                     const title = topic.title || topic.Title;
-                    
+
                     if (!topicId) return;
-                    
+
                     const li = document.createElement('li');
                     li.textContent = title || `Тема ${topicId}`;
                     li.dataset.id = topicId;
@@ -99,80 +153,72 @@
                     list.appendChild(li);
                 });
             } catch (err) {
-                alert('Помилка завантаження тем. Перевірте підключення до сервера.');
+                alert(translations[lang].errLoadTopics);
                 const list = document.getElementById('topic-list');
-                list.innerHTML = '<li style="color: red;">Помилка завантаження тем</li>';
+                list.innerHTML = `<li style="color: red;">${translations[lang].errLoadTopics}</li>`;
             }
         }
-    
-        // ==== 3. Почати тест по темі ====
+
         async function startTestByTopic() {
             const selected = document.querySelector('#topic-list li.selected');
             if (!selected) {
-                alert('Будь ласка, оберіть тему для тестування');
+                alert(translations[lang].alertSelectTopic);
                 return;
             }
-    
+
             const testId = selected.dataset.id;
             if (!testId) {
-                alert('Помилка: не знайдено ID теми');
+                alert(translations[lang].alertNoTestId);
                 return;
             }
-                
+
             try {
                 const response = await fetch(`${API_BASE}/by-test/${testId}`);
-                
+
                 if (!response.ok) {
-                    throw new Error(`Помилка сервера: ${response.status}`);
+                    throw new Error(`${translations[lang].alertLoadTestError} ${response.status}`);
                 }
-                
+
                 const questions = await response.json();
-                
+
                 if (!questions || !Array.isArray(questions) || questions.length === 0) {
-                    throw new Error('Не отримано питань від сервера');
+                    throw new Error(translations[lang].alertLoadTestError);
                 }
-                
+
                 launchTest(questions);
             } catch (error) {
-                alert(`Помилка при завантаженні тесту: ${error.message}`);
+                alert(`${translations[lang].alertLoadTestError} ${error.message}`);
             }
         }
-    
-        // ==== 4. Випадковий тест ====
+
         async function startRandomTest() {
             try {
                 const count = document.getElementById('random-question-count').value;
                 const response = await fetch(`${API_BASE}/random/${count}`);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`${translations[lang].alertRandomTestError} ${response.status}`);
                 }
                 const questions = await response.json();
                 if (!questions || !Array.isArray(questions) || questions.length === 0) {
-                    throw new Error('No questions received from the server');
+                    throw new Error(translations[lang].alertRandomTestError);
                 }
                 launchTest(questions);
             } catch (error) {
                 console.error('Error starting random test:', error);
-                alert('Помилка при завантаженні тесту. Спробуйте ще раз.');
+                alert(translations[lang].alertRandomTestError);
             }
         }
-    
-        // ==== 5. Відобразити тест ====
-        function launchTest(questions) {
-            // Перейти на окрему сторінку з передачею JSON через sessionStorage
-            console.log("questions from API:", questions);
 
+        function launchTest(questions) {
             sessionStorage.setItem('testQuestions', JSON.stringify(questions));
             window.location.href = 'test-run.html';
         }
-    
+
         document.getElementById('start-topic-test').addEventListener('click', startTestByTopic);
         document.getElementById('start-random-test').addEventListener('click', startRandomTest);
-    
-        // Початкове завантаження тем
-        loadTopics();
-    </script>
-    
 
+        loadTopics();
+        applyLang();
+    </script>
 </body>
 </html>
