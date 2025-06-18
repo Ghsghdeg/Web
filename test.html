@@ -67,50 +67,26 @@
         // ==== 2. Отримати список тем ====
         async function loadTopics() {
             try {
-                console.log('Loading topics from:', `${API_BASE}/topics`);
-                const response = await fetch(`${API_BASE}/topics`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                });
-                console.log('Topics response status:', response.status);
+                const response = await fetch(`${API_BASE}/topics`);
                 
                 if (!response.ok) {
-                    const errorText = await response.text().catch(() => 'Unknown error');
-                    console.error('Topics error response:', errorText);
-                    throw new Error(`Не вдалося завантажити теми: HTTP ${response.status} - ${errorText}`);
+                    throw new Error('Помилка завантаження тем');
                 }
                 
                 const topics = await response.json();
-                console.log('Raw topics data:', topics);
                 
-                if (!Array.isArray(topics)) {
-                    throw new Error('Сервер повернув некоректні дані тем');
-                }
-                
-                if (topics.length === 0) {
-                    throw new Error('У базі даних немає тем для тестування');
+                if (!Array.isArray(topics) || topics.length === 0) {
+                    throw new Error('Немає доступних тем');
                 }
                 
                 const list = document.getElementById('topic-list');
                 list.innerHTML = '';
     
                 topics.forEach(topic => {
-                    // Log the entire topic object to see its structure
-                    console.log('Full topic object:', topic);
-                    
-                    // The API is returning test data with camelCase properties
                     const topicId = topic.testID || topic.TestID;
                     const title = topic.title || topic.Title;
                     
-                    if (!topicId) {
-                        console.error('Topic missing ID:', topic);
-                        return; // Skip this topic if it has no ID
-                    }
-                    
-                    console.log('Processing topic:', { id: topicId, title: title });
+                    if (!topicId) return;
                     
                     const li = document.createElement('li');
                     li.textContent = title || `Тема ${topicId}`;
@@ -119,19 +95,13 @@
                         [...list.children].forEach(c => c.classList.remove('selected'));
                         li.classList.add('selected');
                         document.getElementById('start-topic-test').disabled = false;
-                        console.log('Selected topic:', { id: topicId, title: title });
                     });
                     list.appendChild(li);
                 });
-                
-                console.log(`Successfully loaded ${topics.length} topics`);
             } catch (err) {
-                console.error("Error loading topics:", err);
-                alert(`Помилка завантаження тем: ${err.message}\n\nПеревірте, чи працює сервер.`);
-                
-                // Show error message in the topic list
+                alert('Помилка завантаження тем. Перевірте підключення до сервера.');
                 const list = document.getElementById('topic-list');
-                list.innerHTML = '<li style="color: red; font-weight: bold;">Помилка завантаження тем. Перевірте підключення до сервера.</li>';
+                list.innerHTML = '<li style="color: red;">Помилка завантаження тем</li>';
             }
         }
     
