@@ -72,8 +72,8 @@ fetch('https://pdd-api.duckdns.org/api/topics')
     const select = document.getElementById('topic-select');
     topics.forEach(topic => {
       const option = document.createElement('option');
-      option.value = topic.id;
-      option.textContent = topic.name;
+      option.value = topic.testID;
+      option.textContent = topic.title;
       select.appendChild(option);
     });
   })
