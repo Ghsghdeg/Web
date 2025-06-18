@@ -69,15 +69,19 @@
     const userId = JSON.parse(localStorage.currentUser).id;
     const API_BASE = "https://pdd-api.duckdns.org/api/tests";
 
-    function loadFromSessionStorage() {
-        const stored = sessionStorage.getItem("testQuestions");
-        if (!stored) {
-            alert("Питання не знайдені. Поверніться назад і запустіть тест.");
-            return;
-        }
-        questions = JSON.parse(stored);
-        renderQuestion();
+   function loadFromSessionStorage() {
+    const stored = sessionStorage.getItem("testQuestions");
+    if (!stored) {
+        alert("Питання не знайдені. Поверніться назад і запустіть тест.");
+        return;
     }
+    questions = JSON.parse(stored);
+    if (!questions.length) {
+        alert("Питання відсутні або некоректні. Поверніться та перезапустіть тест.");
+        return;
+    }
+    renderQuestion();
+}
 
     function renderQuestion() {
         const container = document.getElementById("question-container");
