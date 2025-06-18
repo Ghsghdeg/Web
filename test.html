@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Тести - Автошкола</title>
     <link rel="stylesheet" href="styles.css">
- 
 </head>
 <body>
     <header>
@@ -14,18 +13,17 @@
             <nav>
                 <ul>
                     <li><a href="Main.html">Головна</a></li>
-                    <li><a href="pdr.html" >ПДР</a></li> 
+                    <li><a href="pdr.html">ПДР</a></li> 
                     <li><a href="test.html" class="active">Тести</a></li>
                     <li><a href="#">Відгуки</a></li>
                     <li><a href="Contact.html">Контакти</a></li>
                 </ul>
             </nav>
             <div class="header-icons">
-               
             </div>
-             <div class="language-switcher">
-                    <button onclick="toggleLang()">🌐 UKR / ENG</button>
-                </div>
+            <div class="language-switcher">
+                <button onclick="toggleLang()">🌐 UKR / ENG</button>
+            </div>
         </div>
     </header>
     <div class="container">
@@ -38,6 +36,12 @@
 
         <div id="topics-section" class="content-section">
             <label id="label-topic">Оберіть тему:</label>
+            <label id="label-difficulty">Оберіть складність:</label>
+            <select id="difficulty-select">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+            </select>
             <ul class="topic-list" id="topic-list">
                 <!-- Теми підвантажуються сюди -->
             </ul>
@@ -47,6 +51,12 @@
         <div id="random-section" class="content-section" style="display:none;">
             <label id="label-random-count">Оберіть кількість питань:</label>
             <input type="number" id="random-question-count" min="1" max="50" value="10" />
+            <label id="label-random-difficulty">Оберіть складність:</label>
+            <select id="random-difficulty-select">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+            </select>
             <button class="start-test" id="start-random-test">Почати тест</button>
         </div>
 
@@ -63,8 +73,10 @@
                 btnTopics: "Тести по темах",
                 btnRandom: "Випадкове тестування",
                 labelTopic: "Оберіть тему:",
+                labelDifficulty: "Оберіть складність:",
                 startTopicTest: "Почати тест",
                 labelRandomCount: "Оберіть кількість питань:",
+                labelRandomDifficulty: "Оберіть складність:",
                 startRandomTest: "Почати тест",
                 errLoadTopics: "Помилка завантаження тем. Перевірте підключення до сервера.",
                 alertSelectTopic: "Будь ласка, оберіть тему для тестування",
@@ -77,8 +89,10 @@
                 btnTopics: "Tests by Topics",
                 btnRandom: "Random Test",
                 labelTopic: "Select Topic:",
+                labelDifficulty: "Select Difficulty:",
                 startTopicTest: "Start Test",
                 labelRandomCount: "Select Number of Questions:",
+                labelRandomDifficulty: "Select Difficulty:",
                 startRandomTest: "Start Test",
                 errLoadTopics: "Error loading topics. Check your server connection.",
                 alertSelectTopic: "Please select a topic for testing",
@@ -96,8 +110,10 @@
             document.getElementById("btn-topics").textContent = t.btnTopics;
             document.getElementById("btn-random").textContent = t.btnRandom;
             document.getElementById("label-topic").textContent = t.labelTopic;
+            document.getElementById("label-difficulty").textContent = t.labelDifficulty;
             document.getElementById("start-topic-test").textContent = t.startTopicTest;
             document.getElementById("label-random-count").textContent = t.labelRandomCount;
+            document.getElementById("label-random-difficulty").textContent = t.labelRandomDifficulty;
             document.getElementById("start-random-test").textContent = t.startRandomTest;
         }
 
@@ -168,6 +184,7 @@
             }
 
             const testId = selected.dataset.id;
+            const difficulty = document.getElementById('difficulty-select').value;
             if (!testId) {
                 alert(translations[lang].alertNoTestId);
                 return;
@@ -195,7 +212,8 @@
         async function startRandomTest() {
             try {
                 const count = document.getElementById('random-question-count').value;
-                const response = await fetch(`${API_BASE}/random/${count}`);
+                const difficulty = document.getElementById('random-difficulty-select').value;
+                const response = await fetch(`${API_BASE}/random/${count}/${difficulty}`);
                 if (!response.ok) {
                     throw new Error(`${translations[lang].alertRandomTestError} ${response.status}`);
                 }
@@ -211,7 +229,7 @@
         }
 
         function launchTest(questions) {
-            sessionStorage.setItem('testQuestions', JSON.stringify(questions));
+            sessionStorage.set-affix('testQuestions', JSON.stringify(questions));
             window.location.href = 'test-run.html';
         }
 
